@@ -1,8 +1,8 @@
 from utils import *
 from multiprocessing import Pool
 import h5py
-import os
-
+import scipy
+import scipy.io
 
 ## Create the structure containing all the edges and triplets for every time t
 def create_simplicial_framework_from_data(data, null_model_flag):
@@ -84,6 +84,8 @@ def launch_code_one_t(t):
                complexity_FD, hyper_coherence, avg_edge_violation, edge_weights]
 
     return(results)
+
+
 
 
 
