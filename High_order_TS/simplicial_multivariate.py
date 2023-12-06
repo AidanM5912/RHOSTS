@@ -136,7 +136,7 @@ if __name__ == "__main__":
         f1.close()
 
     # Loading the data from file
-    data_TS = load_data_mat(path_file)
+    data_TS = load_data(path_file)
 
 
     # Creating the structure containing the edge and triplet signals within the Pool process.
