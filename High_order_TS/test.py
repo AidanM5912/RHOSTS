@@ -18,7 +18,7 @@ def create_simplicial_framework_from_data(data, null_model_flag):
 def handle_output(result):
     global flag_edgeweight_fn
     #added the line below
-    output_path = "/Users/aidanmorson/Documents/GitHub/RHOSTS/High_order_TS/test_results"
+    output_path = "/Users/aidanmorson/Documents/GitHub/RHOSTS/High_order_TS/test_results/"
     print("Output Path:", output_path)  # Added this line
     if flag_edgeweight_fn != None:
 #added the line below
