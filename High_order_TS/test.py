@@ -17,8 +17,14 @@ def create_simplicial_framework_from_data(data, null_model_flag):
 # Hyper complexity FD; Hyper coherence; Average edge violation
 def handle_output(result):
     global flag_edgeweight_fn
+    #added the line below
+    output_path = "/Users/aidanmorson/Documents/GitHub/RHOSTS/High_order_TS/test_results"
     if flag_edgeweight_fn != None:
-        f2 = h5py.File('{0}.hd5'.format(flag_edgeweight_fn), 'a')
+#added the line below
+        hdf5_file_path = os.path.join(output_path, '{0}.hd5'.format(flag_edgeweight_fn)) 
+       #f2 = h5py.File('{0}.hd5'.format(flag_edgeweight_fn), 'a')
+        #added this line below got rid of one above
+        f2 = h5py.File(hdf5_file_path, 'a')
         current_time = int(result[0])
         n_lines = len(list(result[-1].items()))
         c_values = np.array(
