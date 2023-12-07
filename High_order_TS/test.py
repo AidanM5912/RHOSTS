@@ -19,9 +19,11 @@ def handle_output(result):
     global flag_edgeweight_fn
     #added the line below
     output_path = "/Users/aidanmorson/Documents/GitHub/RHOSTS/High_order_TS/test_results"
+    print("Output Path:", output_path)  # Added this line
     if flag_edgeweight_fn != None:
 #added the line below
         hdf5_file_path = os.path.join(output_path, '{0}.hd5'.format(flag_edgeweight_fn)) 
+        print("Creating file at:", hdf5_file_path)  # Added this line
        #f2 = h5py.File('{0}.hd5'.format(flag_edgeweight_fn), 'a')
         #added this line below got rid of one above
         f2 = h5py.File(hdf5_file_path, 'a')
@@ -33,6 +35,7 @@ def handle_output(result):
         dset1 = f2.create_dataset(
             "{0}".format(current_time), (m, n), dtype='f', data=c_values)
         f2.close()
+        print("File created successfully at:", hdf5_file_path)  # Added this line
     print(" ".join([str(el) for el in result[:-1]]))
 
 
