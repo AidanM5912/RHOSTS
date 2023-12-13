@@ -58,7 +58,7 @@ edge_weights = list([float(weights[1])
 edge_weights = list(sorted(edge_weights))
 # NOTE: you need to put here the path to the javaPlex distribution on your system
 libs = [
-    os.path.join(javaplex_path, 'javaplex.jar')
+    os.path.join(/Users/aidanmorson/Documents/GitHub/RHOSTS/High_order_TS_with_scaffold/javaplex/, 'javaplex.jar')
 ]
 # print(libs)
 

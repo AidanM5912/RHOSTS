@@ -10,11 +10,6 @@ import itertools
 import persim
 import cechmate as cm
 
-# Libraries for the scaffold (piping the filtration file to a jython code)
-import os
-from collections import OrderedDict
-import subprocess
-from subprocess import Popen, PIPE, STDOUT
 
 # Function that parse all the inputs from the stdin
 def parse_input(input):
@@ -26,8 +21,6 @@ def parse_input(input):
     n_input = len(input)
     # This is the filename containing the multivariate time series
     path_file = input[1]
-    javaplex_path = False
-    scaffold_path = False
 
     # Looping through the inputs (with the argparse library, it might be cleaner)
     for s in range(n_input):
@@ -43,15 +36,10 @@ def parse_input(input):
             # ->  save the weighted network for each time point on the hd5 file
             flag_edgeweight = True
             flag_edgeweight_fn = input[s + 1]
-        if sys.argv[s] == '-j':
-            # -> Load the javaplex path and the scaffold path
-            javaplex_path = input[s + 1]
-            scaffold_path = input[s + 2]
-
     t_total = [t for t in range(t_init, t_end)]
 
-    return(path_file, t_init, t_end, t_total, ncores, null_model_flag,
-           flag_edgeweight, flag_edgeweight_fn, javaplex_path, scaffold_path)
+    return(path_file, t_init, t_end, t_total, ncores, null_model_flag, flag_edgeweight, flag_edgeweight_fn)
+
 
 # Function that loads the multivariate time series from different formats
 def load_data(path_single_file):
@@ -62,8 +50,27 @@ def load_data(path_single_file):
         data = load_data_synthetic_kaneko(path_single_file)
     elif extension_file == 'txt':
         data = load_normaltxt(path_single_file)
+    ###################
+    ###################
+    ###################
+    #Added numpy extension
+    ###################
+    ###################
+    ###################
+    elif extension_file == 'npy':
+        data = load_data_numpy(path_single_file)
+    #######################
+    #####################
     # print(np.shape(data))
     return(data)
+
+##############################################
+#Load data in .npy format
+def load_data_numpy(path_single_file):
+    file_to_open = path_single_file
+    data = np.load(file_to_open)
+    return(data)
+###############################################
 
 
 # Load data in .mat format (rows are ROI, columns are the time instants)
@@ -102,9 +109,8 @@ def load_normaltxt(path_single_file):
     return(np.transpose(data))
 
 
-
 class simplicial_complex_mvts():
-    def __init__(self, multivariate_time_series, null_model_flag, folder_javaplex, scaffold_outdir):
+    def __init__(self, multivariate_time_series, null_model_flag):
         nR, T = np.shape(multivariate_time_series)
 
         # Variables
@@ -128,10 +134,6 @@ class simplicial_complex_mvts():
         self.percentage_of_triangles_discarded = 0
         self.percentage_CC_triangles_positive = 0
         self.percentage_CC_triangles_negative = 0
-
-        # Variables for the scaffold
-        self.javaplex_path = folder_javaplex
-        self.scaffold_outdir = scaffold_outdir
 
         # If null model is on, do an independent reshuffling of the original time series
         if null_model_flag == True:
@@ -172,7 +174,8 @@ class simplicial_complex_mvts():
         # ets_max -> is a vector 1xT containing the maximum between all the z-scored edges
         # To decrease the RAM usage, the product is done in batches of size < N
         for i in range(self.num_ROI):
-            c_prod = self.raw_data[u[l_index_prev:l_index_next]] * self.raw_data[v[l_index_prev:l_index_next]]
+            c_prod = self.raw_data[u[l_index_prev:l_index_next]
+                                   ] * self.raw_data[v[l_index_prev:l_index_next]]
             self.ets_zscore[l_index_prev:l_index_next] = np.array(
                 [np.mean(c_prod, axis=1), np.std(c_prod, axis=1)]).T
             self.ets_max = np.max(
@@ -205,7 +208,8 @@ class simplicial_complex_mvts():
         # triplets_max -> is a vector 1xT containing the maximum between all the z-scored triplets
         # To decrease the RAM usage, the product is done in batches of size < N*(N-1)
         for i in range(self.num_ROI):
-    # Calculate c_prod with correct indexing
+            #
+            # print(i,l_index_prev,l_index_next)
             c_prod = self.raw_data[u[l_index_prev:l_index_next]] * \
                 self.raw_data[v[l_index_prev:l_index_next]] * \
                 self.raw_data[w[l_index_prev:l_index_next]]
@@ -220,6 +224,8 @@ class simplicial_complex_mvts():
             gap = l_index_next - l_index_prev
         # Saving the indices of all the triplets
         self.triplets_indexes = dict(zip(np.arange(N_triplets), indices))
+
+
 
     # Function that, for a specific time t, computes the maximum between edges and triplets
     # This is used to replace the infty term after computing the persistence diagram
@@ -240,6 +246,7 @@ class simplicial_complex_mvts():
         else:
             weight_corrected = -np.abs(current_weight)
         return(weight_corrected)
+
 
     # Function that creates the list of simplices (and provide also the list of violations)
     def create_simplicial_complex(self, t_current):
@@ -282,11 +289,12 @@ class simplicial_complex_mvts():
                 list_of_signs, weight_current)
             list_simplices.append((indexes_ijk, weight_current_corrected))
 
-        list_simplices_for_filtration, list_violations, percentage_of_triangles_discarded, list_simplices_scaffold_all = self.fix_violations(
+        list_simplices_for_filtration, list_violations, percentage_of_triangles_discarded = self.fix_violations(
             list_simplices, t_current)
-        return(list_simplices_for_filtration, list_violations, percentage_of_triangles_discarded, list_simplices_scaffold_all)
+        return(list_simplices_for_filtration, list_violations, percentage_of_triangles_discarded)
 
-    # Function that removes all the violating triangles to create a proper filtration
+
+    # Function that remove all the violating triangles to create a proper filtration
     def fix_violations(self, list_simplices, t_current):
         # Sorting the simplices in a descending order according to weights
         sorted_simplices = sorted(
@@ -305,32 +313,12 @@ class simplicial_complex_mvts():
         total_CC_triangles = 0
         CC_triangles_negative = 0
 
-        # List all the valid simplices that will be
-        # used for the computation of the scaffold
-        list_simplices_scaffold_all = OrderedDict()
-        counter_simplices_all = 0
-
-        # Loop over the sorted simplices, and flipping the sign of all the weights (so that the points in the persistence diagram are above the diagonal)
+        # Loop over the sorted simplices, and flippling the sign of all the weights (so that the points in the persistence diagram are above the diagonal)
         for index, i in enumerate(sorted_simplices):
             simplices, weight = i
 
             # If the current simplex is an edge or a node, then I will immediately include it
             if len(simplices) <= 2:
-                # If it's a node I add it in the list of all simplices
-                if len(simplices) == 1:
-                    list_simplices_scaffold_all[str(list(simplices))] = [str(
-                        counter_simplices_all), str(-weight)]
-                else:
-                    # If the simplex is an edge, check whether the weight of the last inserted element
-                    # is different from the current one, if not use the same order idx of appearance (counter_simplices_all)
-                    if weight != sorted_simplices[index - 1][1]:
-                        counter_simplices_all += 1
-                        list_simplices_scaffold_all[str(list(simplices))] = [str(
-                            counter_simplices_all), str(-weight)]
-                    else:
-                        list_simplices_scaffold_all[str(list(simplices))] = [str(
-                            counter_simplices_all), str(-weight)]
-
                 list_simplices_for_filtration.append((simplices, -weight))
                 set_simplices.add(tuple(simplices))
                 counter += 1
@@ -346,13 +334,6 @@ class simplicial_complex_mvts():
                     set_simplices.add(tuple(simplices))
                     list_simplices_for_filtration.append((simplices, -weight))
                     counter += 1
-                    if weight != sorted_simplices[index - 1][1]:
-                        counter_simplices_all += 1
-                        list_simplices_scaffold_all[str(list(simplices))] = [str(
-                            counter_simplices_all), str(-weight)]
-                    else:
-                        list_simplices_scaffold_all[str(list(simplices))] = [str(
-                            counter_simplices_all), str(-weight)]
 
                     # Count the number of positive triangles that are in the filtration
                     if weight >= 0:
@@ -370,9 +351,7 @@ class simplicial_complex_mvts():
         # Fraction of positive triangle discarderd (a.k.a. the hyper coherence)
         hyper_coherence = (1.0 * violation_triangles) / \
             (triangles_count + violation_triangles)
-        list_simplices_scaffold_all = dict(list_simplices_scaffold_all)
-
-        return(list_simplices_for_filtration, list_violating_triangles, hyper_coherence, list_simplices_scaffold_all)
+        return(list_simplices_for_filtration, list_violating_triangles, hyper_coherence)
 
 
 # Function that checks for the pure coherence rule (1 if it is fully coheren, -1 otherwise)
@@ -418,36 +397,3 @@ def compute_edgeweight(list_violations, num_ROI):
             else:
                 edge_weight[edgeID] = [weight, 1.0]
     return(edge_weight)
-
-
-def compute_scaffold(clique_dic_file, dimension, directory='./', tag_name_output='_0', javaplex_path='/home/andrea/javaplex/lib/',
-                     save_generators=True, verbose=False, python_persistenthomologypath='persistent_homology_calculation.py'):
-    '''
-    Function that calls the jython code to compute the scaffold.
-    It requires a valid filtration "clique_dic_file", which is piped as an input string for the jython code
-    persistent_homology_calculation.py
-    Notice that clique_dic_file is a dictionary, where keys represent the simplices
-    in the string form '[i,j,l]' (list not tuple!).
-    Values are in the form: [str(idx_arrival), str(weight)]
-    Example of a valid dictionary with three nodes (with the same arrival idx and weight),
-    three edges and a triangle:
-    {'[0]':['0','1.5'],'[1]':['0','1.5'],'[2]':['0','1.5'],'[0,2]':['1','2.5'],'[0,1]':['2','3.2'],
-     '[1, 2]':['3','3.5'], '[0,1,2]':['4','5.0']]}
-    The parameter dimension represents the homology group '''
-
-    # Check that the persistent homology python scripts exists in the current directory:
-    # print(os.path.exists(python_persistenthomologypath))
-    if os.path.exists(python_persistenthomologypath) == False:
-        sys.stderr.write("File {0} is not present in the current directory. I cannot launch the scaffold code! Skipping...\n".format(
-            python_persistenthomologypath))
-    else:
-        Clique_dictionary = str(clique_dic_file)
-        args = ["jython", python_persistenthomologypath]
-        for opt in [dimension, directory, tag_name_output, javaplex_path, save_generators]:
-            args.extend([str(opt)])
-        s = subprocess.Popen(args, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-
-        # Here I'm piping the dictionary as input string for the jython code
-        grep_stdout = s.communicate(input=Clique_dictionary.encode('utf-8'))[0]
-        if verbose == True:
-            print(grep_stdout.decode())

@@ -51,6 +51,12 @@ def launch_code_one_t(t):
     # If flag is activated, compute the scaffold and save the list of generators on file
     # The function below uses jython (and the corresponding code: persistent_homology_calculation.py)
     if ts_simplicial.javaplex_path != False:
+        #added the two lines below
+
+        #scaffold_gen_dir = os.path.join(ts_simplicial.scaffold_outdir, 'scaffold_gen')#added
+        #os.makedirs(scaffold_gen_dir, exist_ok=True) #added # This line creates the directory if it doesn't exist
+        print("Scaffold Output Directory:", ts_simplicial.scaffold_outdir)
+
         compute_scaffold(list_filtration_scaffold, dimension=1, directory=ts_simplicial.scaffold_outdir,
                          tag_name_output='_{0}'.format(t),
                          javaplex_path=ts_simplicial.javaplex_path, save_generators=True, verbose=False)
