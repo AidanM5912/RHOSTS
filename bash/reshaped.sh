@@ -2,7 +2,7 @@
 
 codepath="/Users/aidanmorson/Documents/GitHub/RHOSTS/High_order_TS/simplicial_multivariate.py"
 data_path="/Users/aidanmorson/Desktop/research/data/Trace_20220518_12_53_35_chip11350_curated/spike_times.mat"
-output_path = "/Users/aidanmorson/Desktop/research/output
+output_path = "/Users/aidanmorson/Desktop/research/pairwise_HO/HO"
 # Define the number of cores to use
 NCORES=4
 
