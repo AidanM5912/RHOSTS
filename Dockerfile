@@ -1,26 +1,30 @@
 # Use Miniconda as the base image
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:latest
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy the current directory contents into the container at /usr/src/app
-COPY . .
-
-# Copy the environment.yml file into the container
+# Copy the environment.yml and pip_requirements.txt files into the container
 COPY environment.yml .
+COPY pip_requirements.txt .
 
 # Install mamba
 RUN conda install mamba -n base -c conda-forge
 
-# Create the conda environment using mamba and the environment.yml file
+# Create the conda environment and install packages using mamba
 RUN mamba env create -f environment.yml
 
-# Activate the conda environment and ensure it remains active
+# Install build tools (gcc, g++)
+RUN apt-get update && apt-get install -y build-essential
+
+# Activate the conda environment
 SHELL ["conda", "run", "-n", "neuro_env", "/bin/bash", "-c"]
 
-# Install pip packages
+# Install pybind11 first to ensure it is available for phat
+RUN pip install pybind11
+
+# Install the rest of the pip packages
 RUN pip install --no-cache-dir -r pip_requirements.txt
 
 # Set the entrypoint to bash
-ENTRYPOINT ["conda", "run", "-n", "neuro_env", "bash"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "neuro_env", "bash"]
