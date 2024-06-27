@@ -26,5 +26,8 @@ RUN pip install pybind11
 # Install the rest of the pip packages
 RUN pip install --no-cache-dir -r pip_requirements.txt
 
+## Copy the entire root directory into the container
+COPY . .
+
 # Set the entrypoint to bash
 ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "neuro_env", "bash"]
