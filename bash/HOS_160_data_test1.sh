@@ -6,7 +6,7 @@ codepath="/Users/aidanmorson/Documents/GitHub/RHOSTS/High_order_TS_with_scaffold
 data_path="/Users/aidanmorson/Desktop/research/extracted_spike_times.mat"
 output_file= "/Users/aidanmorson/Desktop/research/pairwise_HO/output/HO_S/output1"
 # Define the number of cores to use
-NCORES=5
+#NCORES=5
 
 # Optional flags (if needed)
 # TIME_RANGE="-t 0 1000"
@@ -14,4 +14,6 @@ NCORES=5
 
 
 # Run the Python script with the specified arguments
-python ${codepath} ${data_path} -p ${NCORES}  -s ${output_file}
+
+-p ${NCORES}
+python ${codepath} ${data_path}  -s ${output_file}
